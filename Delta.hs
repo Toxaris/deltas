@@ -8,6 +8,12 @@ module Delta where
 
 import Prelude hiding ((+), (-), id)
 
+
+-- deltas and derivatives
+--
+-- based on the theory by Cai Yufai
+-- Haskell implementation by Tillmann Rendel
+
 data Base
   = X | Y | Z
   deriving (Eq, Show)
@@ -32,6 +38,10 @@ instance (Changing a, Changing b) => Changing (a -> b) where
   id f = \x dx -> id (f (x + dx))
   f + df = \x -> f x + df x (id x)
   f - g = \x dx -> f (x + dx) - g x
+
+-- property-based testing with exhaustive test case generation
+--
+-- based on QuickCheck and SmallCheck
 
 class Generate a where
   generate :: [a]
@@ -101,6 +111,8 @@ instance Property Bool where
 instance (Generate a, Property p) => Property (a -> p) where
   forall f = and [forall (f x) | x <- generate]
   exists f = or [exists (f x) | x <- generate]
+
+-- lemma 1 from Cai's text on the theory of deltas
 
 lemma1a = forall (\(v :: Base) -> v + id v == v)
 lemma1b = forall (\(v :: Base -> Base) -> v + id v == v)
