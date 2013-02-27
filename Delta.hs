@@ -7,7 +7,7 @@
 module Delta where
 
 import Prelude hiding ((+), (-), id)
-
+import Properties
 
 -- deltas and derivatives
 --
@@ -39,18 +39,7 @@ instance (Changing a, Changing b) => Changing (a -> b) where
   f + df = \x -> f x + df x (id x)
   f - g = \x dx -> f (x + dx) - g x
 
--- property-based testing with exhaustive test case generation
---
--- based on QuickCheck and SmallCheck
-
-class Generate a where
-  generate :: [a]
-
-class Consume a where
-  consume :: [b] -> [a -> b]
-
-instance (Generate a, Eq b) => Eq (a -> b) where
-  f == g = and [f x == g x | x <- generate]
+-- support instances for automatic test case generation
 
 instance Generate Base where
   generate = [X, Y, Z]
@@ -76,41 +65,6 @@ instance Consume a => Consume (Replace a) where
     f <- consume (consume results)
     return (\x -> case x of
       Replace x y -> f x y)
-
-instance (Consume a, Generate b) => Generate (a -> b) where
-  generate = do
-    consume generate
-
-
-{-
-instance Consume a => Consume [a] where
-  consume results = do
-    let f results [] = results
-        f results (x : xs) = [y | f <- consume results, y <- f x]
-    return (f results)
-
-instance (Generate a, Consume b) => Consume (a -> b) where
-  consume results = do
-    let args = generate 
-
-    return (\f -> map f args)
-
-    where
-      nest results [] = results
-      next results (arg : args) = do
--}
-
-class Property p where
-  forall :: p -> Bool
-  exists :: p -> Bool
-
-instance Property Bool where
-  forall x = x
-  exists x = x
-
-instance (Generate a, Property p) => Property (a -> p) where
-  forall f = and [forall (f x) | x <- generate]
-  exists f = or [exists (f x) | x <- generate]
 
 -- lemma 1 from Cai's text on the theory of deltas
 
