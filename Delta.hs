@@ -22,6 +22,7 @@ data Replace a = Replace a a
   deriving (Eq, Show)
 
 class Changing a where
+  -- Using type families here is unnecessary, and means looking for trouble. Also, I'd rather use a type class in ChangeCategory
   type Delta a
   id :: a -> Delta a
   (+) :: a -> Delta a -> a
