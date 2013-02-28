@@ -17,13 +17,17 @@ class Changing a => ChangeCategory a where
 
 instance ChangeCategory Base where
   newtype AddressedDelta Base = N { unN :: Delta Base }
-  src (N (Replace a b)) = a
+  src (N (Replace a _)) = a
   baseDelta = unN
 
 type BagMap a = Map a Int
 newtype Bag a = Bag (BagMap a)
-data BagChange a deltas = BagChange [deltas] (BagMap a)
 
+-- We need the correct argument for delta
+data BagChange a delta = BagChange [delta] (BagMap a)
+
+-- From lens, similar to Scala's `_`:
+-- f a b ?? d = \c -> f a b c d
 (??) = flip
 
 instance (Ord a, ChangeCategory a) => Changing (Bag a) where

@@ -22,9 +22,10 @@ data Replace a = Replace a a
   deriving (Eq, Show)
 
 class Changing a where
-  -- Using type families here is unnecessary, and means looking for trouble. Also, I'd rather use a type class in ChangeCategory
+  -- Using type families here is a bit convenient, but means risking trouble later. Also, I'd rather use a type class in ChangeCategory.
   type Delta a
   id :: a -> Delta a
+  -- Can we use operators not used in Prelude? I need integers elsewhere...
   (+) :: a -> Delta a -> a
   (-) :: a -> a -> Delta a
 
