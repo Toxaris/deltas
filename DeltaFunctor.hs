@@ -28,10 +28,11 @@ instance (Changing a, Changing b) => Changing (a, b) where
   (+) = (+) `star2` (+)
   (-) = (-) `star2` (-)
 
-data DeltaEither a b da db = DLeft da
-                           | DRight db
-                           | DToLeft b a
-                           | DToRight a b
+data DeltaEither a b da db
+  = DLeft da
+  | DRight db
+  | DToLeft b a
+  | DToRight a b
 
 instance (Changing a, Changing b) => Changing (Either a b) where
   type Delta (Either a b) = DeltaEither a b (Delta a) (Delta b)
