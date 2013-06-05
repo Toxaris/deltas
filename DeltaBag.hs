@@ -97,9 +97,6 @@ instance (Ord a, ChangeCategory a) => Changing (Bag a) where
 fromList :: (Ord t) => [t] -> Bag t
 fromList l = Bag $ foldl (\ bag el -> M.insertWith (\ new old -> new P.+ old) el 1 bag) M.empty l
 
---test1 :: BagℕChange Int (AddressedDelta Int)
---test1 = flip (-) (fromList [1, 1, 1]) (fromList [1, 2, 3])
-
 v1 = fromList [X, X, X]
 v2 = fromList [X, Y, Z]
 v3 = fromList [X]
