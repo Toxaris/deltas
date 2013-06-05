@@ -41,7 +41,8 @@ newtype Bag a = Bag { unBag :: BagℕMap a }
   deriving (Show, Eq)
 
 -- normalizes a bag: if an element has multiplicity count 0, it should not be explicitly mentioned.
-bagNormalize = Bag . M.filter (/= 0) . unBag
+mapNormalize = M.filter (/= 0)
+bagNormalize = Bag . mapNormalize . unBag
 
 newtype BagSubChanges a deltaA = BSC (Map a (BagℕMap deltaA))
   deriving (Eq, Show)
@@ -72,7 +73,7 @@ instance (Ord a, ChangeCategory a) => Changing (Bag a) where
         convB1 = toBagℤ b1
         convB2 = toBagℤ b2
         -- Elements only in convB2 will have the wrong sign in the result
-        correctDiff bag = M.unionWith (\ new old -> old P.- 2 * new) bag diff
+        correctDiff bag = mapNormalize $ M.unionWith (\ new old -> old P.- 2 * new) bag diff
         diff = M.difference convB2 convB1
 
   (Bag bagMap) + (BagℕChange deltas c) =
