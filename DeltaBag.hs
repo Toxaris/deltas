@@ -23,28 +23,30 @@ instance ChangeCategory Base where
   src (N (Replace a _)) = a
   baseDelta = unN
 
-type BagMap a = Map a Int
-newtype Bag a = Bag (BagMap a)
+type BagℕMap t = Map t Natural
+type BagℤMap t = Map t Integer
+
+newtype Bag a = Bag (BagℤMap a)
 
 -- We need the correct argument for delta
-data BagChange a delta = BagChange [delta] (BagMap a)
+data BagℕChange a deltaA = BagℕChange [deltaA] (BagℤMap a)
 
 -- From lens, similar to Scala's `_`:
 -- f a b ?? d = \c -> f a b c d
 (??) = flip
 
 instance (Ord a, ChangeCategory a) => Changing (Bag a) where
-  type Delta (Bag a) = BagChange a (AddressedDelta a)
+  type Delta (Bag a) = BagℕChange a (AddressedDelta a)
 
-  id x = BagChange [] M.empty
+  id x = BagℕChange [] M.empty
 
-  (Bag b1) - (Bag b2) = BagChange [] $ M.unionWith (P.-) b1 b2
+  (Bag b1) - (Bag b2) = BagℕChange [] $ M.unionWith (P.-) b1 b2
 
-  (Bag bagMap) + (BagChange deltas c) =
+  (Bag bagMap) + (BagℕChange deltas c) =
     Bag . M.unionWith (P.+) c . (foldl replace ?? deltas) $ bagMap
       where
         -- Apply the delta only to one copy of its source.
-        replace :: BagMap a -> AddressedDelta a -> BagMap a
+        replace :: BagℤMap a -> AddressedDelta a -> BagℤMap a
         replace bagMap delta =
           M.insertWith' (P.+) dst 1 .
           M.insert toReplace (currMult P.- 1) .
