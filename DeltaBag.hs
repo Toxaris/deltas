@@ -30,8 +30,11 @@ instance ChangeCategory Base where
 type BagℕMap t = Map t Natural
 type BagℤMap t = Map t Integer
 
-newtype Bag a = Bag (BagℕMap a)
+newtype Bag a = Bag { unBag :: BagℕMap a }
   deriving (Show, Eq)
+
+-- normalizes a bag: if an element has multiplicity count 0, it should not be explicitly mentioned.
+bagNormalize = Bag . M.filter (/= 0) . unBag
 
 -- We need the correct argument for delta
 data BagℕChange a deltaA = BagℕChange [deltaA] (BagℤMap a)
@@ -49,10 +52,17 @@ instance (Ord a, ChangeCategory a) => Changing (Bag a) where
 
   id x = BagℕChange [] M.empty
 
-  (Bag b1) - (Bag b2) = BagℕChange [] $ M.unionWith (P.-) (toBagℤ b1) (toBagℤ b2)
+  (Bag b1) - (Bag b2) =
+    BagℕChange [] $ correctDiff $ M.unionWith (P.-) convB1 convB2
+      where
+        convB1 = toBagℤ b1
+        convB2 = toBagℤ b2
+        -- Elements only in convB2 will have the wrong sign in the result
+        correctDiff bag = M.unionWith (\ new old -> old P.- 2 * new) bag diff
+        diff = M.difference convB2 convB1
 
   (Bag bagMap) + (BagℕChange deltas c) =
-    Bag . toBagℕ . M.unionWith (P.+) c . toBagℤ . (foldl replace ?? deltas) $ bagMap
+    bagNormalize . Bag . toBagℕ . M.unionWith (P.+) c . toBagℤ . (foldl replace ?? deltas) $ bagMap
       where
         -- Apply the delta only to one copy of its source.
         replace :: BagℕMap a -> AddressedDelta a -> BagℕMap a
@@ -90,5 +100,6 @@ test3C = v3 - v1
 test3 = v1 + test3C == v3
 
 test4C = v3 - v2
---fails
 test4 = v2 + test4C == v3
+
+allTests = and [test1, test2, test3, test4]
