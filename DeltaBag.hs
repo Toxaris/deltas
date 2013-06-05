@@ -36,8 +36,14 @@ newtype Bag a = Bag { unBag :: BagℕMap a }
 -- normalizes a bag: if an element has multiplicity count 0, it should not be explicitly mentioned.
 bagNormalize = Bag . M.filter (/= 0) . unBag
 
+newtype BagSubChanges a deltaA = BSC [deltaA]
+  deriving (Eq, Show)
+emptySubChanges = BSC []
+subChangesFromList :: [deltaA] -> BagSubChanges a deltaA
+subChangesFromList = BSC
+
 -- We need the correct argument for delta
-data BagℕChange a deltaA = BagℕChange [deltaA] (BagℤMap a)
+data BagℕChange a deltaA = BagℕChange (BagSubChanges a deltaA) (BagℤMap a)
                          deriving (Show, Eq)
 
 toBagℤ :: BagℕMap k -> BagℤMap k
@@ -50,10 +56,10 @@ toBagℕ = M.map fromInteger
 instance (Ord a, ChangeCategory a) => Changing (Bag a) where
   type Delta (Bag a) = BagℕChange a (AddressedDelta a)
 
-  id x = BagℕChange [] M.empty
+  id x = BagℕChange emptySubChanges M.empty
 
   (Bag b1) - (Bag b2) =
-    BagℕChange [] $ correctDiff $ M.unionWith (P.-) convB1 convB2
+    BagℕChange emptySubChanges $ correctDiff $ M.unionWith (P.-) convB1 convB2
       where
         convB1 = toBagℤ b1
         convB2 = toBagℤ b2
@@ -64,8 +70,8 @@ instance (Ord a, ChangeCategory a) => Changing (Bag a) where
   (Bag bagMap) + (BagℕChange deltas c) =
     bagNormalize . Bag . toBagℕ . M.unionWith (P.+) c . toBagℤ . applyChanges deltas $ bagMap
       where
-        applyChanges :: [AddressedDelta a] -> BagℕMap a -> BagℕMap a
-        applyChanges deltas = foldl replace ?? deltas
+        applyChanges :: BagSubChanges a (AddressedDelta a) -> BagℕMap a -> BagℕMap a
+        applyChanges (BSC deltas) = foldl replace ?? deltas
         -- Apply the delta only to one copy of its source.
         replace :: BagℕMap a -> AddressedDelta a -> BagℕMap a
         replace bagMap delta =
@@ -91,7 +97,7 @@ test1C :: BagℕChange Base (AddressedDelta Base)
 test1C = v2 - v1 --flip (-) v1 v2
 
 test2C :: BagℕChange Base (AddressedDelta Base)
-test2C = BagℕChange [N (Y - X), N (Z - X)] M.empty
+test2C = BagℕChange (subChangesFromList [N (Y - X), N (Z - X)]) M.empty
 
 -- should be asserted
 test1 = v1 + test1C == v2
