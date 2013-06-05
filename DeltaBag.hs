@@ -36,11 +36,12 @@ newtype Bag a = Bag { unBag :: BagℕMap a }
 -- normalizes a bag: if an element has multiplicity count 0, it should not be explicitly mentioned.
 bagNormalize = Bag . M.filter (/= 0) . unBag
 
-newtype BagSubChanges a deltaA = BSC [deltaA]
+newtype BagSubChanges a deltaA = BSC (Map a (BagℕMap deltaA))
   deriving (Eq, Show)
-emptySubChanges = BSC []
-subChangesFromList :: [deltaA] -> BagSubChanges a deltaA
-subChangesFromList = BSC
+emptySubChanges = BSC M.empty
+
+subChangesFromList :: (Ord a, Ord deltaA) => a -> [deltaA] -> BagSubChanges a deltaA
+subChangesFromList base changes = BSC $ M.fromList [(base, unBag . fromList $ changes)]
 
 -- We need the correct argument for delta
 data BagℕChange a deltaA = BagℕChange (BagSubChanges a deltaA) (BagℤMap a)
@@ -71,7 +72,10 @@ instance (Ord a, ChangeCategory a) => Changing (Bag a) where
     bagNormalize . Bag . toBagℕ . M.unionWith (P.+) c . toBagℤ . applyChanges deltas $ bagMap
       where
         applyChanges :: BagSubChanges a (AddressedDelta a) -> BagℕMap a -> BagℕMap a
-        applyChanges (BSC deltas) = foldl replace ?? deltas
+        applyChanges (BSC deltas) = M.foldl replace2 ?? deltas --foldl replace ?? deltas
+        replace2 :: BagℕMap a -> BagℕMap (AddressedDelta a) -> BagℕMap a
+        replace2 bagMap deltas = M.foldlWithKey replaceN bagMap deltas
+
         replaceN :: BagℕMap a -> AddressedDelta a -> Natural -> BagℕMap a
         replaceN bagMap delta n =
           M.insertWith' (P.+) dst n .
@@ -81,10 +85,6 @@ instance (Ord a, ChangeCategory a) => Changing (Bag a) where
             toReplace = src delta
             currMult = bagMap ! toReplace
             dst = toReplace + baseDelta delta
-
-        -- Apply the delta only to one copy of its source.
-        replace :: BagℕMap a -> AddressedDelta a -> BagℕMap a
-        replace bagMap delta = replaceN bagMap delta 1
 
 fromList :: (Ord t) => [t] -> Bag t
 fromList l = Bag $ foldl (\ bag el -> M.insertWith (\ new old -> new P.+ old) el 1 bag) M.empty l
@@ -100,7 +100,7 @@ test1C :: BagℕChange Base (AddressedDelta Base)
 test1C = v2 - v1 --flip (-) v1 v2
 
 test2C :: BagℕChange Base (AddressedDelta Base)
-test2C = BagℕChange (subChangesFromList [N (Y - X), N (Z - X)]) M.empty
+test2C = BagℕChange (subChangesFromList X [N (Y - X), N (Z - X)]) M.empty
 
 -- should be asserted
 test1 = v1 + test1C == v2
