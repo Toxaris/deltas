@@ -64,3 +64,31 @@ instance (Ord a, ChangeCategory a) => Changing (Bag a) where
             toReplace = src delta
             currMult = bagMap ! toReplace
             dst = toReplace + baseDelta delta
+
+fromList :: (Ord t) => [t] -> Bag t
+fromList l = Bag $ foldl (\ bag el -> M.insertWith (\ new old -> new P.+ old) el 1 bag) M.empty l
+
+--test1 :: BagℕChange Int (AddressedDelta Int)
+--test1 = flip (-) (fromList [1, 1, 1]) (fromList [1, 2, 3])
+
+v1 = fromList [X, X, X]
+v2 = fromList [X, Y, Z]
+v3 = fromList [X]
+
+test1C :: BagℕChange Base (AddressedDelta Base)
+test1C = v2 - v1 --flip (-) v1 v2
+
+test2C :: BagℕChange Base (AddressedDelta Base)
+test2C = BagℕChange [N (Y - X), N (Z - X)] M.empty
+
+-- should be asserted
+test1 = v1 + test1C == v2
+
+test2 = v1 + test2C == v2
+
+test3C = v3 - v1
+test3 = v1 + test3C == v3
+
+test4C = v3 - v2
+--fails
+test4 = v2 + test4C == v3
