@@ -16,7 +16,7 @@ import Properties
 
 data Base
   = X | Y | Z
-  deriving (Eq, Show)
+  deriving (Ord, Eq, Show)
 
 data Replace a = Replace a a
   deriving (Eq, Show)

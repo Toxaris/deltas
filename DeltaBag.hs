@@ -23,7 +23,7 @@ class Changing a => ChangeCategory a where
   src :: AddressedDelta a -> a
 
 instance ChangeCategory Base where
-  newtype AddressedDelta Base = N { unN :: Delta Base }
+  newtype AddressedDelta Base = N { unN :: Delta Base } deriving (Show, Eq)
   src (N (Replace a _)) = a
   baseDelta = unN
 
@@ -31,9 +31,11 @@ type BagℕMap t = Map t Natural
 type BagℤMap t = Map t Integer
 
 newtype Bag a = Bag (BagℕMap a)
+  deriving (Show, Eq)
 
 -- We need the correct argument for delta
 data BagℕChange a deltaA = BagℕChange [deltaA] (BagℤMap a)
+                         deriving (Show, Eq)
 
 toBagℤ :: BagℕMap k -> BagℤMap k
 toBagℤ = M.map toInteger
