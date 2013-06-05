@@ -72,16 +72,19 @@ instance (Ord a, ChangeCategory a) => Changing (Bag a) where
       where
         applyChanges :: BagSubChanges a (AddressedDelta a) -> BagℕMap a -> BagℕMap a
         applyChanges (BSC deltas) = foldl replace ?? deltas
-        -- Apply the delta only to one copy of its source.
-        replace :: BagℕMap a -> AddressedDelta a -> BagℕMap a
-        replace bagMap delta =
-          M.insertWith' (P.+) dst 1 .
-          M.insert toReplace (currMult P.- 1) .
+        replaceN :: BagℕMap a -> AddressedDelta a -> Natural -> BagℕMap a
+        replaceN bagMap delta n =
+          M.insertWith' (P.+) dst n .
+          M.insert toReplace (currMult P.- n) .
           M.delete toReplace $ bagMap
          where
             toReplace = src delta
             currMult = bagMap ! toReplace
             dst = toReplace + baseDelta delta
+
+        -- Apply the delta only to one copy of its source.
+        replace :: BagℕMap a -> AddressedDelta a -> BagℕMap a
+        replace bagMap delta = replaceN bagMap delta 1
 
 fromList :: (Ord t) => [t] -> Bag t
 fromList l = Bag $ foldl (\ bag el -> M.insertWith (\ new old -> new P.+ old) el 1 bag) M.empty l
