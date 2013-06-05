@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeFamilies, FlexibleContexts, ScopedTypeVariables, NoMonomorphismRestriction #-}
-module DeltaBag where
+module DeltaFunctor where
 
 import Prelude hiding ((+), (-), id, (.))
 import qualified Prelude as P
