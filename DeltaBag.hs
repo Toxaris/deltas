@@ -62,8 +62,10 @@ instance (Ord a, ChangeCategory a) => Changing (Bag a) where
         diff = M.difference convB2 convB1
 
   (Bag bagMap) + (BagℕChange deltas c) =
-    bagNormalize . Bag . toBagℕ . M.unionWith (P.+) c . toBagℤ . (foldl replace ?? deltas) $ bagMap
+    bagNormalize . Bag . toBagℕ . M.unionWith (P.+) c . toBagℤ . applyChanges deltas $ bagMap
       where
+        applyChanges :: [AddressedDelta a] -> BagℕMap a -> BagℕMap a
+        applyChanges deltas = foldl replace ?? deltas
         -- Apply the delta only to one copy of its source.
         replace :: BagℕMap a -> AddressedDelta a -> BagℕMap a
         replace bagMap delta =
