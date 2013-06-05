@@ -14,3 +14,7 @@ import Control.Arrow
 star2 :: (Arrow a1, Arrow a2) =>
  (a1 b (a2 c d)) -> (a1 b' (a2 c' d')) -> a1 (b, b') (a2 (c, c') (d, d'))
 star2 op1 op2 = arr (uncurry (***)) . (op1 *** op2)
+
+-- From lens, similar to Scala's `_`:
+-- f a b ?? d = \c -> f a b c d
+(??) = flip

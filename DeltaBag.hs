@@ -7,6 +7,8 @@ import qualified Data.Map as M
 import Data.Map(Map, (!))
 import Delta
 
+import ArrowUtils
+
 -- Needs package natural-numbers
 import Data.Natural
 
@@ -30,10 +32,6 @@ newtype Bag a = Bag (BagℤMap a)
 
 -- We need the correct argument for delta
 data BagℕChange a deltaA = BagℕChange [deltaA] (BagℤMap a)
-
--- From lens, similar to Scala's `_`:
--- f a b ?? d = \c -> f a b c d
-(??) = flip
 
 instance (Ord a, ChangeCategory a) => Changing (Bag a) where
   type Delta (Bag a) = BagℕChange a (AddressedDelta a)
