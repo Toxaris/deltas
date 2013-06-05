@@ -14,6 +14,7 @@ import qualified Control.Category as C
 import ArrowUtils
 
 import Delta
+import DeltaInt
 
 class Changing a => ChangeCategory a where
   -- We can't use type here...
@@ -27,6 +28,11 @@ instance ChangeCategory Base where
   newtype AddressedDelta Base = N { unN :: Delta Base } deriving (Show, Eq, Ord)
   src (N (Replace a _)) = a
   baseDelta = unN
+
+instance ChangeCategory Integer where
+  data AddressedDelta Integer = I { base :: Integer, unI :: Integer } deriving (Show, Eq, Ord)
+  src = base
+  baseDelta = unI
 
 type BagℕMap t = Map t Natural
 type BagℤMap t = Map t Integer
