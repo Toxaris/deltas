@@ -1,4 +1,4 @@
--- for the computing Delta types:
+-- to compute Delta types:
 {-# LANGUAGE TypeFamilies #-}
 
 -- for the test cases:
