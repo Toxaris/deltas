@@ -23,7 +23,7 @@ class Changing a => ChangeCategory a where
   src :: AddressedDelta a -> a
 
 instance ChangeCategory Base where
-  newtype AddressedDelta Base = N { unN :: Delta Base } deriving (Show, Eq)
+  newtype AddressedDelta Base = N { unN :: Delta Base } deriving (Show, Eq, Ord)
   src (N (Replace a _)) = a
   baseDelta = unN
 

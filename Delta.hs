@@ -19,7 +19,7 @@ data Base
   deriving (Ord, Eq, Show)
 
 data Replace a = Replace a a
-  deriving (Eq, Show)
+  deriving (Ord, Eq, Show)
 
 class Changing a where
   -- Using type families here is a bit convenient, but means risking trouble later. Also, I'd rather use a type class in ChangeCategory.
