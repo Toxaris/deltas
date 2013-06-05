@@ -3,16 +3,17 @@ module DeltaBag where
 
 import Prelude hiding ((+), (-), id)
 import qualified Prelude as P
+
 import qualified Data.Map as M
 import Data.Map(Map, (!))
+import Data.Natural
+
 import Control.Arrow
 import qualified Control.Category as C
-import Delta
 
 import ArrowUtils
 
--- Needs package natural-numbers
-import Data.Natural
+import Delta
 
 class Changing a => ChangeCategory a where
   -- We can't use type here...
