@@ -1,10 +1,12 @@
-{-# LANGUAGE TypeFamilies, FlexibleContexts, ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies, FlexibleContexts, ScopedTypeVariables, NoMonomorphismRestriction #-}
 module DeltaBag where
 
 import Prelude hiding ((+), (-), id)
 import qualified Prelude as P
 import qualified Data.Map as M
 import Data.Map(Map, (!))
+import Control.Arrow
+import qualified Control.Category as C
 import Delta
 
 import ArrowUtils
@@ -28,23 +30,30 @@ instance ChangeCategory Base where
 type BagℕMap t = Map t Natural
 type BagℤMap t = Map t Integer
 
-newtype Bag a = Bag (BagℤMap a)
+newtype Bag a = Bag (BagℕMap a)
 
 -- We need the correct argument for delta
 data BagℕChange a deltaA = BagℕChange [deltaA] (BagℤMap a)
+
+toBagℤ :: BagℕMap k -> BagℤMap k
+toBagℤ = M.map toInteger
+
+-- Can cause errors if the maps contains negative numbers
+toBagℕ :: BagℤMap k -> BagℕMap k
+toBagℕ = M.map fromInteger
 
 instance (Ord a, ChangeCategory a) => Changing (Bag a) where
   type Delta (Bag a) = BagℕChange a (AddressedDelta a)
 
   id x = BagℕChange [] M.empty
 
-  (Bag b1) - (Bag b2) = BagℕChange [] $ M.unionWith (P.-) b1 b2
+  (Bag b1) - (Bag b2) = BagℕChange [] $ M.unionWith (P.-) (toBagℤ b1) (toBagℤ b2)
 
   (Bag bagMap) + (BagℕChange deltas c) =
-    Bag . M.unionWith (P.+) c . (foldl replace ?? deltas) $ bagMap
+    Bag . toBagℕ . M.unionWith (P.+) c . toBagℤ . (foldl replace ?? deltas) $ bagMap
       where
         -- Apply the delta only to one copy of its source.
-        replace :: BagℤMap a -> AddressedDelta a -> BagℤMap a
+        replace :: BagℕMap a -> AddressedDelta a -> BagℕMap a
         replace bagMap delta =
           M.insertWith' (P.+) dst 1 .
           M.insert toReplace (currMult P.- 1) .
